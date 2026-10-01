@@ -46,3 +46,38 @@ void readCSV(const std::string &filename, Matrix &X, Vector &y)
 
     file.close();
 }
+// Обучение через стратегию
+Vector fitGradientDescent(const Matrix &X, const Vector &y, LossGradientStrategy strategy, double lr = 0.01, int epochs = 5000)
+{
+    size_t num_samples = X.size();
+    size_t num_features = X[0].size();
+
+    Vector weights(num_features, 0.0);
+
+    for (int epoch = 0; epoch < epochs; ++epoch)
+    {
+        Vector y_pred(num_samples, 0.0);
+        for (size_t i = 0; i < num_samples; ++i)
+        {
+            y_pred[i] = dot(X[i], weights);
+        }
+
+        Vector loss_grad = strategy(y_pred, y);
+
+        Vector w_grad(num_features, 0.0);
+        for (size_t j = 0; j < num_features; ++j)
+        {
+            for (size_t i = 0; i < num_samples; ++i)
+            {
+                w_grad[j] += X[i][j] * loss_grad[i];
+            }
+        }
+
+        for (size_t j = 0; j < num_features; ++j)
+        {
+            weights[j] -= lr * w_grad[j];
+        }
+    }
+
+    return weights;
+}
