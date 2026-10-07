@@ -6,11 +6,12 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <chrono>
 
 using Vector = std::vector<double>;
 using Matrix = std::vector<Vector>;
 
-using LossGradientStrategy = std::function<Vector(const Vector &y_pred, const Vector &y_true)>;
+using LossGradientStrategy = std::function<Vector(const Vector &, const Vector &)>;
 // Произведение векторов
 inline double dot(const Vector &a, const Vector &b)
 {
@@ -80,4 +81,21 @@ Vector fitGradientDescent(const Matrix &X, const Vector &y, LossGradientStrategy
     }
 
     return weights;
+}
+// Замер времени
+inline auto withBenchmarking(std::function<Vector(const Matrix &, const Vector &, LossGradientStrategy, double, int)> fitFunc)
+{
+    return [fitFunc](const Matrix &X, const Vector &y, LossGradientStrategy strategy, double lr = 0.01, int epochs = 5000)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+
+        Vector result = fitFunc(X, y, strategy, lr, epochs);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+
+        std::cout << "Time: " << elapsed.count() << " ms\n";
+
+        return result;
+    };
 }
